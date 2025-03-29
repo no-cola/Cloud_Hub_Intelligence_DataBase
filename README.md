@@ -1,2 +1,47 @@
-# Privacy_Calculate
-This is a framework and interface for secure multi-party computation, and this repository stores the results of undergraduate research in this project.
+<h2>云枢智库(CHID)</h2>
+<h3>Cloud Hub Intelligence DataBase</h3>
+<h3 align="right">——基于秘密共享的多方隐私保护数据库系统研究
+</h3>
+
+
+<h4>项目简介
+
+本项目旨在研究和开发一种基于秘密共享的多方隐私保护数据库系统（MPC-DB），以解决在多方协作数据分析场景下，如何高效、安全地执行SQL查询语句的问题。通过结合安全多方计算（MPC）技术和数据库优化策略，本项目致力于构建一个功能完备、性能优越且隐私保护能力强大的数据库系统，推动隐私保护技术在商业智能、云计算等领域的应用落地。
+
+
+
+<h4>项目已实现成果
+
+**理论研究与分析：**完成了对安全多方计算（MPC）技术、数据库优化策略以及隐私保护机制的深入研究，明确了项目的技术路线和实现方法。
+
+**基础SQL算子的MPC实现：**成功实现了SELECT、WHERE、ORDER BY、GROUP BY、JOIN等常用SQL算子的MPC版本，为后续的系统优化和功能拓展奠定了基础。
+
+**SMPCache缓存机制设计：**提出了细粒度的缓存机制（SMPCache），通过分解SQL查询为基本安全操作符并缓存中间结果，显著提高了查询效率，解决了传统缓存机制在MPC环境下的局限性问题。
+
+**系统框架搭建：**初步搭建了MP-SPDZ框架，实现了SQL parser与SQL optimizer模块，并完成了底层MPC协议与SQL算子的集成，为系统的实际应用提供了技术支撑。
+
+**隐私保护机制探索：**在MPC协议的基础上，引入了同态加密等技术，增强了数据在传输和计算过程中的隐私保护能力，并设计了SQL语句保护机制，隐藏用户的查询意图和数据访问模式，进一步提升了系统的隐私保护水平。
+
+
+
+<h4>未来预期
+
+**系统性能优化：**进一步优化MPC-DB系统的性能，通过引入更高效的MPC协议、改进缓存策略以及优化系统架构，使系统的查询效率和响应速度达到或接近传统数据库系统的水平，为大规模商业应用提供支持。
+
+**隐私保护能力提升：**持续加强系统的隐私保护能力，探索新的隐私保护技术和机制，如差分隐私等，并将其与MPC技术相结合，以满足不同应用场景下的隐私保护需求，确保用户数据在存储、传输和计算过程中的绝对安全。
+
+**应用场景拓展：**将MPC-DB技术推广到更多领域，如物联网、智能交通、社交网络等，探索其在新兴领域的应用潜力，为解决数据隐私和安全问题提供新的解决方案，推动可信数据空间生态的构建和完善。
+
+**系统功能完善与用户体验提升：**完善MP-SPDZ框架的功能，提供更易于使用的API接口和完整的文档支持，降低系统的使用门槛。同时，优化用户交互界面，提供更友好的操作体验，使用户能够更便捷地使用MPC-DB系统进行数据分析和处理。
+
+**实际应用落地与产业化发展：**通过与相关企业、政府部门等合作，推动MPC-DB技术在实际场景中的应用落地，创造数据价值，服务社会。同时，总结项目经验，撰写高质量的学术论文和技术报告，为隐私保护数据库技术的产业化发展提供理论支持和技术指导。
+
+
+
+```
+@inproceedings{Cloud Hub Intelligence DataBase,
+    author = {Xinyuan Zhu,Jiaqi Li,Hengrui Qu,Chengyi Xiong},
+    title = {{Cloud Hub Intelligence DataBase}: A secret sharing-based multi-party privacy-preserving database system},
+    url = {https://github.com/no-cola/Cloud_Hub_Intelligence_DataBase},
+}
+```
