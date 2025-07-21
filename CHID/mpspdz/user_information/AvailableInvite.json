@@ -1,0 +1,62 @@
+{
+    "73d97c0cde47668e": {
+        "table": "data",
+        "owner": "zxy",
+        "type": "available"
+    },
+    "110863c76ec547a8": {
+        "table": "data",
+        "owner": "zxy",
+        "type": "available"
+    },
+    "19c94cacfac4aa1e": {
+        "table": "data",
+        "generated_by": "zxy1",
+        "permissions": "restricted"
+    },
+    "8baaa34cc8eaf31f": {
+        "table": "data",
+        "generated_by": "ZhuXinYuan",
+        "permissions": "restricted"
+    },
+    "028ec129e7130f71": {
+        "table": "data",
+        "generated_by": "zxy123",
+        "permissions": "restricted"
+    },
+    "b6e1976fbcccc6ee": {
+        "table": "data",
+        "generated_by": "ZhuXinYuan1",
+        "permissions": "restricted"
+    },
+    "4eb115b516ab0c5e": {
+        "table": "data1",
+        "generated_by": "zzz",
+        "permissions": "restricted"
+    },
+    "041bfc48e5e6e3f8": {
+        "table": "data",
+        "generated_by": "zzz",
+        "permissions": "restricted"
+    },
+    "1ac9cf32e32575b1": {
+        "table": "data2",
+        "generated_by": "zzz",
+        "permissions": "restricted"
+    },
+    "844d65cbf85f1a5e": {
+        "table": "data",
+        "generated_by": "test",
+        "permissions": "restricted"
+    },
+    "3d4fc934aa7c21b8": {
+        "table": "data1",
+        "generated_by": "test",
+        "permissions": "restricted"
+    },
+    "25d3ffd3e274c3fc": {
+        "table": "data2",
+        "generated_by": "test",
+        "permissions": "restricted"
+    }
+}

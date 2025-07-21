@@ -1,0 +1,25 @@
+{
+    "table_name": "data",
+    "columns": [
+        "A",
+        "B",
+        "C"
+    ],
+    "rows": 3,
+    "cols": 3,
+    "string_encoding": "base64_value",
+    "string_columns": [],
+    "permissions": [
+        0,
+        1,
+        0
+    ],
+    "free_access_count": 20,
+    "price_per_access": 1.0,
+    "A": [
+        "sum"
+    ],
+    "C": [
+        "groupby"
+    ]
+}

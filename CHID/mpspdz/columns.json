@@ -1,0 +1,11 @@
+{
+  "table_name": "data2",
+  "columns": [
+    "H",
+    "I"
+  ],
+  "rows": 2,
+  "cols": 2,
+  "string_encoding": "base64_value",
+  "string_columns": []
+}

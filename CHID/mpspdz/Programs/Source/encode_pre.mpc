@@ -1,0 +1,29 @@
+program.use_split(3)
+import csv
+import os
+
+csv_file = "data.csv"
+table_name = os.path.splitext(os.path.basename(csv_file))[0]
+
+with open(csv_file, 'r') as f:
+    reader = csv.reader(f, delimiter=',')
+    columns = next(reader)
+    with open("columns.txt", 'w') as col_file:
+        col_file.write(f"{table_name}:{','.join(columns)}\n")
+
+    data = list(reader)
+    rows = len(data)
+    cols = len(data[0]) if rows > 0 else 0
+    print(data)
+
+    from Compiler.library import *
+    from Compiler.types import *
+
+    encrypted = Matrix(rows, cols, sint)
+    for i in range(rows):
+        for j in range(cols):
+            encrypted[i][j] = sint(int(data[i][j]))
+
+    print_ln("%s", encrypted[0][0].reveal())
+    encrypted.write_to_file(0)
+    print_ln("COLUMNS_FILE:columns.txt")

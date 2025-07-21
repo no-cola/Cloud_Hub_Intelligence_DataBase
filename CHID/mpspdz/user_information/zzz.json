@@ -1,0 +1,19 @@
+{
+    "own_table_name": [
+        "data1",
+        "data",
+        "data2"
+    ],
+    "owner_invite": [
+        "47fb71de66e4a34f",
+        "f7c0940e4f11a94a",
+        "7d271e5851615bc3"
+    ],
+    "available_invite": [
+        "4eb115b516ab0c5e",
+        "041bfc48e5e6e3f8",
+        "1ac9cf32e32575b1"
+    ],
+    "available_table_name": [],
+    "access_count": []
+}
