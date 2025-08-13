@@ -1,0 +1,1 @@
+SELECT * FROM data WHERE B<8
