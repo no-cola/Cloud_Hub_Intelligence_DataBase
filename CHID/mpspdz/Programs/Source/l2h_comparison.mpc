@@ -1,3 +1,0 @@
-res = sint.load_mem(0) < sint.load_mem(1)
-res.store_in_mem(3)
-print_ln('comparison in VM: %s', res.reveal())
