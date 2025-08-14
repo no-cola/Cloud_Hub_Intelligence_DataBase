@@ -1,0 +1,354 @@
+from Load import *
+import itertools
+def groupby_sum(table_data, row_mask,groupby_columns, sum_columns, rows, cols):
+    """
+    对排序后的表执行 GROUP BY SUM 操作
+    参数：
+    - table_data: 表数据
+    - row_mask: 行掩码
+    - column_names: 所有列名 (例如: ["name", "gender", "math_score", "english_score"])
+    - object_column: 解析出的列名 (例如: ["gender", "math_score", "gender"])
+    - column_methods: 对应的方法 (例如: [None, "sum", "groupby"])
+    """
+    print_ln("=== GROUP BY SUM 聚合开始 ===")
+    
+    if len(groupby_columns) == 0:
+        print_ln("错误: 未找到GROUP BY列")
+        return table_data, row_mask
+    
+    if len(sum_columns) == 0:
+        print_ln("错误: 未找到SUM列")
+        return table_data, row_mask
+    
+    # 创建结果表
+    result_table = MultiArray([rows, cols], table_data.value_type)
+    
+    
+    @for_range(rows)
+    def _(i):
+        @for_range(cols)
+        def _(j):
+            result_table[i][j] = sint(0)
+    
+    result_row_count = regint(0)
+    
+    print_ln("=== 开始基于有序数组的聚合 ===")
+    
+    @for_range(rows)
+    def _(i):
+        @if_(row_mask[i].reveal())
+        def _():
+            is_same_group = sint(1)
+            
+            @if_(result_row_count > 0)
+            def _():
+                last_result_row = result_row_count - 1
+                group_match = sint(1)
+                
+                for gb_col in groupby_columns:
+                    current_val = table_data[i][gb_col]
+                    last_val = result_table[last_result_row][gb_col]
+                    col_match = (current_val == last_val)
+                    group_match = group_match * col_match
+                
+                is_same_group.update(group_match)
+            
+            @if_(result_row_count == 0)
+            def _():
+                is_same_group.update(sint(0))
+            
+            @if_(is_same_group.reveal())
+            def _():
+                # 累加到现有组
+                last_result_row = result_row_count - 1
+                
+                for sum_col in sum_columns:
+                    old_sum = result_table[last_result_row][sum_col]
+                    new_val = table_data[i][sum_col]
+                    new_sum = old_sum + new_val
+                    result_table[last_result_row][sum_col] = new_sum
+                    
+                    print_ln("SUM %s: %s + %s = %s", 
+                            column_names[sum_col], old_sum.reveal(), new_val.reveal(), new_sum.reveal())
+            
+            @if_((is_same_group == 0).reveal())
+            def _():
+                # 创建新组
+                @for_range(cols)
+                def _(j):
+                    result_table[result_row_count][j] = table_data[i][j]
+                
+                
+                result_row_count.update(result_row_count + 1)
+                print_ln("新组创建完成，当前总组数: %s", result_row_count)
+    
+    print_ln("GROUP BY SUM 聚合完成，最终总共 %s 个组", result_row_count)
+    
+    return result_table
+def groupby_bubble_sort(sorted_table, row_mask, groupby_indices, rows, cols):
+    """
+    基于 GROUP BY 列对表进行冒泡排序
+    table_data:加密大表
+    row_mask:where的行掩码
+    groupby_indices：要group by 的列的下标索引
+    """
+    print_ln("开始 GROUP BY 排序，排序列索引: %s", groupby_indices)
+    
+    
+    
+    # 冒泡排序
+    @for_range(rows)
+    def _(i):
+        @for_range(rows - 1 - i)
+        def _(j):
+            both_valid = row_mask[j] * row_mask[j + 1]
+            should_swap = sint(0)
+            
+            # 比较所有GROUP BY列
+            for k in range(len(groupby_indices)):
+                col_idx = groupby_indices[k]
+                val1 = sorted_table[j][col_idx]
+                val2 = sorted_table[j + 1][col_idx]
+                greater = (val1 > val2)
+                equal = (val1 == val2)
+                should_swap = equal.if_else(should_swap, greater)
+            
+            do_swap = both_valid * should_swap
+            
+            # 交换行数据
+            @for_range(cols)
+            def _(col):
+                temp = sorted_table[j][col]
+                sorted_table[j][col] = do_swap.if_else(sorted_table[j + 1][col], sorted_table[j][col])
+                sorted_table[j + 1][col] = do_swap.if_else(temp, sorted_table[j + 1][col])
+            
+            # 交换掩码
+            temp_mask = row_mask[j]
+            row_mask[j] = do_swap.if_else(row_mask[j + 1], row_mask[j])
+            row_mask[j + 1] = do_swap.if_else(temp_mask, row_mask[j + 1])
+    
+    print_ln("GROUP BY 排序完成")
+    return sorted_table
+def evaluate_postfix_condition(row, columns, postfix_expr):
+    """
+    使用后缀表达式评估WHERE条件
+    
+    参数:
+    - row: 当前行数据
+    - columns: 列名到索引的映射
+    - postfix_expr: 后缀表达式形式的条件列表
+    
+    返回:
+    - sint类型的0或1，表示条件是否满足
+    """
+    # 模拟栈
+    stack = Array(len(postfix_expr), sint)
+    stack_size = regint(0)
+    
+    # 处理每个token
+    for i in range(len(postfix_expr)):
+        token = postfix_expr[i]
+        
+        if token == 'and':
+            # 处理AND操作
+            b = stack[stack_size-1]
+            a = stack[stack_size-2]
+            stack_size -= 2
+            stack[stack_size] = a * b  # 逻辑AND
+            stack_size += 1
+        elif token == 'or':
+            # 处理OR操作
+            b = stack[stack_size-1]
+            a = stack[stack_size-2]
+            stack_size -= 2
+            # OR操作: 如果a或b任一为1，则结果为1
+            stack[stack_size] = a + b - a * b  # 逻辑OR
+            stack_size += 1
+        elif token == '=':
+            # 处理等于操作
+            value = stack[stack_size-1]
+            col_val = stack[stack_size-2]
+            stack_size -= 2
+            stack[stack_size] = (col_val == value)
+            stack_size += 1
+        elif token == '>':
+            # 处理大于操作
+            value = stack[stack_size-1]
+            col_val = stack[stack_size-2]
+            stack_size -= 2
+            stack[stack_size] = (col_val > value)
+            stack_size += 1
+        elif token == '<':
+            # 处理小于操作
+            value = stack[stack_size-1]
+            col_val = stack[stack_size-2]
+            stack_size -= 2
+            stack[stack_size] = (col_val < value)
+            stack_size += 1
+        elif token == '>=':
+            # 处理大于等于操作
+            value = stack[stack_size-1]
+            col_val = stack[stack_size-2]
+            stack_size -= 2
+            stack[stack_size] = (col_val >= value)
+            stack_size += 1
+        elif token == '<=':
+            # 处理小于等于操作
+            value = stack[stack_size-1]
+            col_val = stack[stack_size-2]
+            stack_size -= 2
+            stack[stack_size] = (col_val <= value)
+            stack_size += 1
+        elif token == '!=':
+            # 处理不等于操作
+            value = stack[stack_size-1]
+            col_val = stack[stack_size-2]
+            stack_size -= 2
+            stack[stack_size] = (col_val != value)
+            stack_size += 1
+        else:
+            # 把操作数压入栈
+            if token in columns:
+                # 如果是列名，获取列值
+                col_idx = columns[token]
+                stack[stack_size] = row[col_idx]
+            else:
+                # 如果是常量，转换为sint
+                stack[stack_size] = sint(int(token))
+            stack_size += 1
+    
+    # 栈顶元素就是最终结果
+    return stack[0]
+
+def sql_select(table_data, column_names, where_condition,groupby_indices,sum_indices):
+    """
+    执行SQL SELECT语句
+    
+    参数:
+    - table_data: 输入的二维数据表 (MultiArray)
+    - column_names: 列名列表
+    - where_condition: WHERE条件(后缀表达式形式)
+    
+    返回:
+    - 结果表：仅包含选中的列和满足条件的行
+    - 行掩码：标记哪些行满足条件
+    - 符合条件的行数
+    """
+    # 获取表的维度
+    rows = table_data.sizes[0]
+    cols = table_data.sizes[1]
+    
+    # 创建列名到索引的映射
+    columns = {}
+    for i in range(len(column_names)):
+        columns[column_names[i]] = i
+    
+    # 创建行掩码数组
+    row_mask = Array(rows, sint)
+    
+    # 创建结果表，包含所有原始列(后面会筛选)
+    result_table = MultiArray([rows, cols], table_data.value_type)
+    
+    # 计算每行是否满足条件
+    @for_range(rows)
+    def _(i):
+        # 评估WHERE条件
+        if where_condition:
+            row_mask[i] = evaluate_postfix_condition(table_data[i], columns, where_condition)
+        else:
+            # 如果没有WHERE条件，选择所有行
+            row_mask[i] = sint(1)
+    if(len(groupby_indices)!=0):
+        result_table=groupby_bubble_sort(result_table, row_mask, groupby_indices, rows, cols)
+    if(len(sum_indices)!=0):
+        result_table=groupby_sum(result_table, row_mask,groupby_indices, sum_indices, rows, cols)
+
+    
+    return result_table, row_mask
+
+def process_sql_query(rows, cols, column_names, selected_columns, where_condition, End,columns_names_methods,column_methods):
+    """
+    处理SQL查询，从文件读取数据，执行查询，将结果写入文件
+    
+    参数:
+    - rows: 表的行数
+    - cols: 表的列数
+    - column_names: 列名列表
+    - selected_columns: 要选择的列名列表
+    - where_condition: WHERE条件(后缀表达式形式)
+    """
+    # 计算必要参数
+    total = 0
+    total_row = 1
+    total_col = sum(cols)
+    num_blocks = len(cols)
+    start_indices = [0] * num_blocks
+
+    # 计算每个块的起始索引和总行数
+    for i in range(num_blocks):
+        start_indices[i] = total
+        total += rows[i] * cols[i]
+        total_row *= rows[i]
+
+    # 生成行索引的笛卡尔积
+    row_ranges = [range(r) for r in rows]
+    row_combinations = list(itertools.product(*row_ranges))
+
+    # 初始化索引矩阵（二维列表）
+    index_matrix = [[0] * total_col for _ in range(total_row)]
+
+    # 填充索引矩阵
+    for i, combo in enumerate(row_combinations):
+        col_start = 0
+        for block_idx in range(num_blocks):
+            # 计算当前块在一维数组中的起始索引
+            start_index = start_indices[block_idx] + combo[block_idx] * cols[block_idx]
+            # 填充当前块的所有列
+            for j in range(cols[block_idx]):
+                index_matrix[i][col_start + j] = start_index + j
+            col_start += cols[block_idx]
+    M = MultiArray([total, 1], sint)
+    M.read_from_file(0)
+    print_ln('%s',M.reveal())
+    table_data = MultiArray([total_row,total_col],sint)
+    # 填充结果数组
+    for m in range(total_row):
+        for k in range(total_col):
+            table_data[m][k]=M[index_matrix[m][k]][0]
+    print_ln('%s',table_data.reveal())
+    
+    # 创建列名到索引的映射
+    columns = {}
+    for i in range(len(column_names)):
+        columns[column_names[i]] = i
+    groupby_indices=[]
+    sum_indices=[]
+    for j in range(len(column_methods)):
+        if(column_methods[j]=='groupby'):
+            groupby_indices.append(columns[columns_names_methods[j]])
+        if(column_methods[j]=='sum'):
+            sum_indices.append(columns[columns_names_methods[j]])
+    
+    
+    # 执行SQL查询
+    temp_table, row_mask = sql_select(table_data, column_names, where_condition,groupby_indices,sum_indices)
+    
+    
+    # 写入结果
+    print_ln("%s", row_mask.reveal())
+    row_mask.write_to_file(total)
+
+
+sql = input("请输入SQL语句：")
+loader = Load(sql)
+loader.ClearNew()
+loader.LoadSecret(0)
+loader.write_result_file()
+row_col = loader.RowColNum()
+rows = row_col[0]  # 表的行数
+cols = row_col[1]    # 表的列数 
+column_indices, column_names, columns_names_methods,selected_columns = loader.ReadColumns()   
+where_condition = loader.r_where()
+End = loader.r_end()
+column_methods=loader.r_column_methods()
+process_sql_query(rows, cols, column_names, selected_columns, where_condition, End,columns_names_methods,column_methods)

@@ -6,7 +6,7 @@ set -e  # 遇到错误立即退出
 # 1. 克隆仓库并重命名
 echo "[1/7] 克隆 MP-SPDZ ..."
 git clone https://github.com/data61/MP-SPDZ.git
-mv MP-SPDZ mpspdz
+mv MP-SPDZ-master mpspdz
 cd mpspdz
 
 # 2. 安装系统依赖
@@ -16,6 +16,7 @@ sudo apt-get install -y \
     automake build-essential clang cmake git \
     libboost-dev libboost-filesystem-dev libboost-iostreams-dev libboost-thread-dev \
     libgmp-dev libntl-dev libsodium-dev libssl-dev libtool python3
+make -j 8 replicated-ring-party.x
 
 # 3. 创建所需文件夹
 echo "[3/7] 创建目录结构 ..."
@@ -45,10 +46,13 @@ done
 
 # 6. 安装 Python 依赖
 echo "[6/7] 安装 Python 依赖 ..."
-pip3 install --user flask mysql-connector-python bcrypt
+pip install --user flask mysql-connector-python bcrypt
 
 # 7. 编译并运行示例
 echo "[7/7] 编译并运行 tutorial 示例 ..."
+./Scripts/setup-ssl.sh 3
+echo 1 2 3 4 > Player-Data/Input-P0-0
+echo 1 2 3 4 > Player-Data/Input-P1-0
 ./compile.py -R 64 tutorial
 Scripts/ring.sh tutorial
 
