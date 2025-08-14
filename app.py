@@ -276,11 +276,84 @@ def move_files(temp_dir_path):
         return False, f"处理过程中出错: {str(e)}"
 
 
+# 工具：移除 crontab 中某一行
+def remove_cron_job(cron_cmd):
+    """
+    从当前用户的 crontab 中删除包含 cron_cmd 的那一行
+    """
+    try:
+        current_crontab = subprocess.check_output(['crontab', '-l'], text=True)
+    except subprocess.CalledProcessError:
+        # 用户没有 crontab，直接返回
+        return True
+
+    lines = current_crontab.splitlines()
+    new_lines = [ln for ln in lines if cron_cmd not in ln]
+
+    if len(new_lines) == len(lines):
+        return False  # 没找到，说明已经删了或不存在
+
+    # 写入新的 crontab
+    proc = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE, text=True)
+    proc.communicate(input='\n'.join(new_lines) + '\n')
+    return proc.returncode == 0
+
+
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
 
+@app.route('/delete_stream_task/<int:task_id>', methods=['DELETE'])
+@login_required
+def delete_stream_task(task_id):
+    """
+    删除一条流式查询：DB 记录 + crontab 任务 + 脚本文件
+    """
+    username = session.get('username')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    # 1. 查询任务信息
+    cursor.execute(
+        "SELECT id, script_name, time_settings FROM stream_queries WHERE id = %s AND username = %s",
+        (task_id, username)
+    )
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        conn.close()
+        return jsonify({'success': False, 'message': '任务不存在或无权限'})
+
+    script_name = row['script_name']
+    time_settings = row['time_settings']
+
+    # 2. 删除 DB 记录
+    cursor.execute("DELETE FROM stream_queries WHERE id = %s", (task_id,))
+    conn.commit()
+
+    # 3. 计算脚本绝对路径
+    script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stream_sql")
+    script_path = os.path.join(script_dir, script_name)
+
+    # 4. 从 crontab 移除对应任务行
+    cron_cmd = script_path
+    cron_removed = remove_cron_job(cron_cmd)
+
+    # 5. 删除脚本文件
+    file_removed = False
+    if os.path.isfile(script_path):
+        os.remove(script_path)
+        file_removed = True
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+        'success': True,
+        'message': f'任务已删除 (crontab: {"已清理" if cron_removed else "未找到"}, 文件: {"已删除" if file_removed else "未找到"})',
+        'deleted_script_name': script_name
+    })
 # 用户登录API
 @app.route('/login', methods=['POST'])
 def login():
@@ -821,68 +894,6 @@ def my_stream_tasks():
         if conn and conn.is_connected():
             conn.close()
 
-@app.route('/delete_stream_task/<int:task_id>', methods=['DELETE'])
-@login_required
-def delete_stream_task(task_id):
-    username = session['username']
-    conn = None
-    cursor = None
-    try:
-        conn = mysql.connector.connect(
-            host=DB_CONFIG['host'],
-            user=DB_CONFIG['user'],
-            password=DB_CONFIG['password'],
-            port=DB_CONFIG['port'],
-            database=DB_NAME,
-            use_pure=True,
-            ssl_disabled=True
-        )
-        cursor = conn.cursor(dictionary=True)
-        
-        # 首先，获取要删除任务的 script_name
-        cursor.execute("SELECT script_name FROM stream_queries WHERE id = %s AND username = %s", (task_id, username))
-        task = cursor.fetchone()
-        
-        if not task:
-            return jsonify({'success': False, 'message': '任务未找到或无权删除'}), 404
-            
-        deleted_script_name = task['script_name']
-        
-        # 删除数据库中的任务记录
-        cursor.execute("DELETE FROM stream_queries WHERE id = %s AND username = %s", (task_id, username))
-        conn.commit()
-        
-        if cursor.rowcount > 0:
-            # 删除关联的脚本文件
-            if deleted_script_name:
-                # 脚本存储在 app.py 同级目录下的 stream_sql 文件夹中
-                script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stream_sql")
-                script_path_to_delete = os.path.join(script_dir, deleted_script_name)
-                if os.path.exists(script_path_to_delete):
-                    try:
-                        os.remove(script_path_to_delete)
-                        print(f"Successfully deleted script file: {script_path_to_delete}")
-                    except OSError as e:
-                        print(f"Error deleting script file {script_path_to_delete}: {e}")
-                        # 即使脚本删除失败，数据库记录也已删除，可以考虑记录此错误
-                else:
-                    print(f"Script file not found, cannot delete: {script_path_to_delete}")
-
-            return jsonify({'success': True, 'message': '任务已成功删除', 'deleted_script_name': deleted_script_name})
-        else:
-            # 如果 rowcount 是 0，可能是 task_id 不存在或不属于该用户
-            return jsonify({'success': False, 'message': '删除任务失败，任务可能已被删除或不存在'})
-            
-    except Exception as e:
-        print(f"Error deleting stream task: {e}") # 建议添加日志
-        if conn:
-            conn.rollback()
-        return jsonify({'success': False, 'message': f'删除任务时发生错误: {str(e)}'})
-    finally:
-        if cursor:
-            cursor.close()
-        if conn and conn.is_connected():
-            conn.close()
 
 
 
