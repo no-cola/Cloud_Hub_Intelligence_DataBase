@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据表加密 - 本地工具</title>
+    <link rel="stylesheet" href="/static/css/user_style.css">
+    <style>
+        /* 表格样式 */
+        .csv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .csv-table th,
+        .csv-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        .csv-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .csv-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .csv-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .preview-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        pre.auto-wrap {
+            white-space: pre-wrap;        /* 保留换行符并自动换行 */
+            word-wrap: break-word;        /* 旧版浏览器兼容 */
+            overflow-wrap: anywhere;      /* 现代浏览器优先 */
+            word-break: break-all;        /* 强制长单词换行 */
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="logo">本地工具</div>
+            <ul class="nav">
+                <li><a href="/">返回首页</a></li>
+                <li><a href="/decrypt">数据表解密</a></li>
+            </ul>
+        </div>
+        
+        <div class="content">
+            <h1>数据表加密</h1>
+            <div class="warning-message">
+                <span>⚠️</span> 本页面加密均在本地进行，不会泄露隐私数据
+            </div>
+            
+            <div class="upload-section">
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="upload-group">
+                        <label for="csv-file">选择CSV文件：</label>
+                        <input type="file" id="csv-file" name="csv-file" accept=".csv" required>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="preview-section" class="preview-section hidden">
+                <h3>CSV文件预览</h3>
+                <div class="preview-info">
+                    文件名：<span id="file-name"></span> | 
+                    行数：<span id="row-count"></span> | 
+                    列数：<span id="col-count"></span>
+                </div>
+                <div class="table-container">
+                    <table id="csv-table" class="csv-table"></table>
+                </div>
+                <button id="encrypt-btn" class="btn btn-primary" style="margin-top: 20px;">开始加密</button>
+            </div>
+            
+            <div id="result-section" class="result-section hidden">
+                <h3>加密结果</h3>
+                <p class="info-text">由于加密结果涉及不可见字符，所以经过Base64二次加密后显示：</p>
+                
+                <div class="result-files">
+                    <div class="file-result">
+                        <h4>Transactions-P0.data (Base64)</h4>
+                        <pre id="p0-result" class="auto-wrap"></pre>
+                    </div>
+                    <div class="file-result">
+                        <h4>Transactions-P1.data (Base64)</h4>
+                        <pre id="p1-result" class="auto-wrap"></pre>
+                    </div>
+                    <div class="file-result">
+                        <h4>Transactions-P2.data (Base64)</h4>
+                        <<pre id="p2-result" class="auto-wrap"></pre>
+                    </div>
+                </div>
+                
+                <div class="download-section">
+                    <h4>下载加密文件</h4>
+                    <button class="btn btn-secondary" onclick="downloadFile('columns.json')">下载 columns.json</button>
+                    <button class="btn btn-secondary" onclick="downloadFile('Transactions-P0.data')">下载 Transactions-P0.data</button>
+                    <button class="btn btn-secondary" onclick="downloadFile('Transactions-P1.data')">下载 Transactions-P1.data</button>
+                    <button class="btn btn-secondary" onclick="downloadFile('Transactions-P2.data')">下载 Transactions-P2.data</button>
+                </div>
+            </div>
+            
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>正在处理，请稍候...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/encrypt.js"></script>
+</body>
+</html>

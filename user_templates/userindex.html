@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地数据加解密工具</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="home-container">
+            <div class="header">
+                <h1>本地数据加解密工具</h1>
+                <p class="subtitle">安全、私密的数据处理工具</p>
+            </div>
+            
+            <div class="feature-cards">
+                <div class="card">
+                    <div class="card-icon">🔐</div>
+                    <h3>数据表加密</h3>
+                    <p>将CSV文件加密为多方计算格式</p>
+                    <button class="btn btn-primary" onclick="window.location.href='/encrypt'">
+                        开始加密
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-icon">🔓</div>
+                    <h3>数据表解密</h3>
+                    <p>将加密文件解密为原始CSV格式</p>
+                    <button class="btn btn-secondary" onclick="window.location.href='/decrypt'">
+                        开始解密
+                    </button>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h4>使用说明</h4>
+                <ul>
+                    <li>所有操作均在本地进行，不会上传任何数据</li>
+                    <li>加密功能支持CSV格式文件</li>
+                    <li>解密功能需要上传加密后的zip文件</li>
+                    <li>处理完成后可立即下载结果到本地</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

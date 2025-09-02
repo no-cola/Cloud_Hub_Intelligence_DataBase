@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据表解密 - 本地工具</title>
+    <link rel="stylesheet" href="/static/css/user_style.css">
+    <style>
+        /* 表格样式，与加密页面保持一致 */
+        .csv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .csv-table th,
+        .csv-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .csv-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .csv-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .csv-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .preview-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="logo">本地工具</div>
+            <ul class="nav">
+                <li><a href="/">返回首页</a></li>
+                <li><a href="/encrypt">数据表加密</a></li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h1>数据表解密</h1>
+            <div class="warning-message">
+                <span>⚠️</span> 本页面解密均在本地进行，不会泄露隐私数据
+            </div>
+
+            <div class="upload-section">
+                <form id="decrypt-form" enctype="multipart/form-data">
+                    <div class="upload-group">
+                        <label for="zip-file">选择加密文件（zip格式）：</label>
+                        <input type="file" id="zip-file" name="zip-file" accept=".zip" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">解密</button>
+                </form>
+            </div>
+
+            <!-- 解密结果预览区域 -->
+            <div id="preview-section" class="preview-section hidden">
+                <h3>解密结果预览</h3>
+                <div class="preview-info">
+                    文件名：<span id="file-name"></span> |
+                    行数：<span id="row-count"></span> |
+                    列数：<span id="col-count"></span>
+                </div>
+                <div class="table-container">
+                    <table id="csv-table" class="csv-table"></table>
+                </div>
+            </div>
+
+            <!-- 下载按钮区域 -->
+            <div id="download-section" class="download-section hidden">
+                <button class="btn btn-secondary" onclick="downloadCSV()">下载解密后的CSV文件</button>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>正在解密处理，请稍候...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/decrypt.js"></script>
+</body>
+</html>
