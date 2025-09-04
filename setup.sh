@@ -6,7 +6,7 @@ set -e  # 遇到错误立即退出
 # 1. 克隆仓库并重命名
 echo "[1/7] 克隆 MP-SPDZ ..."
 git clone https://github.com/data61/MP-SPDZ.git
-mv MP-SPDZ-master mpspdz
+mv MP-SPDZ mpspdz
 cd mpspdz
 
 # 2. 安装系统依赖
@@ -19,8 +19,12 @@ sudo apt-get install -y \
 make -j 8 replicated-ring-party.x
 
 # 3. 创建所需文件夹
-echo "[3/7] 创建目录结构 ..."
-mkdir -p db user user_information
+echo "[3/7] 创建目录结构和文件 ..."
+mkdir -p db user user_information cache
+cd user_information
+touch OwnerInvite.json
+touch AvailableInvite.json
+cd ..
 
 # 4. 将 .mpc 源文件拷贝到 Programs/Source
 echo "[4/7] 拷贝 MPC 源文件 ..."
