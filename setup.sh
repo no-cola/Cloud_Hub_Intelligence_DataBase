@@ -50,7 +50,7 @@ done
 
 # 6. 安装 Python 依赖
 echo "[6/7] 安装 Python 依赖 ..."
-pip install --user flask mysql-connector-python bcrypt
+pip install flask mysql-connector-python bcrypt sqlglot
 
 # 7. 编译并运行示例
 echo "[7/7] 编译并运行 tutorial 示例 ..."
