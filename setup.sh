@@ -20,10 +20,13 @@ make -j 8 replicated-ring-party.x
 
 # 3. 创建所需文件夹
 echo "[3/7] 创建目录结构和文件 ..."
-mkdir -p db user user_information cache
+mkdir -p db user user_information cache query_cache
 cd user_information
 touch OwnerInvite.json
 touch AvailableInvite.json
+cd ..
+cd query_cache
+touch cache.json
 cd ..
 
 # 4. 将 .mpc 源文件拷贝到 Programs/Source

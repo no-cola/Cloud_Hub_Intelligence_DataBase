@@ -605,24 +605,72 @@ def execute_query():
         # 执行查询
         #executor = SQLExecutor()
         #result = executor.execute(sql_query)
-        
-        try:
-            executor = SQLExecutor()
-            print(f"开始执行查询: {sql_query}")
-            result = executor.execute(sql_query)
-            print(f"查询执行完成，结果: {result}")
-            
-            # 处理 SQLExecutor 返回的元组格式
-            if isinstance(result, tuple):
-                success, message = result
-                result = {'success': success, 'message': message}
-            elif not isinstance(result, dict):
-                # 如果不是字典也不是元组，转换为标准格式
-                result = {'success': False, 'message': str(result)}
-                
-        except Exception as exec_error:
-            print(f"执行查询时发生异常: {exec_error}")
-            return jsonify({'success': False, 'message': f'执行查询时发生异常: {str(exec_error)}'})
+        # 【新增】1. 构造 query_cache 所需路径
+        QUERY_CACHE_DIR = os.path.join(MP_SPDZ_DIR, 'query_cache')
+        CACHE_JSON      = os.path.join(QUERY_CACHE_DIR, 'cache.json')
+        USER_RESULT_ZIP = os.path.join(USER_DIR, 'result_table.zip')
+
+        os.makedirs(QUERY_CACHE_DIR, exist_ok=True)
+
+        # 【新增】2. 尝试命中缓存
+        cache_map = {}
+        if os.path.exists(CACHE_JSON):
+            with open(CACHE_JSON, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                cache_map = json.loads(content) if content else {}          # {"folder_name": "sql", ...}
+
+        hit_folder = None
+        for folder_name, cached_sql in cache_map.items():
+            if cached_sql == sql_query:
+                hit_folder = folder_name
+                break
+
+        if hit_folder:
+            # 命中缓存：直接把对应目录下的 result_table.zip 复制到 user 目录
+            src_zip = os.path.join(QUERY_CACHE_DIR, hit_folder, 'result_table.zip')
+            if os.path.exists(src_zip):
+                shutil.copy2(src_zip, USER_RESULT_ZIP)
+                result={'success': True, 'message': 'cache匹配成功'}
+            else:
+                # 虽然索引命中，但文件丢失，降级为未命中
+                hit_folder = None
+
+        # 【新增】3. 未命中缓存，继续执行原查询流程
+        if not hit_folder:
+            try:
+                executor = SQLExecutor()
+                print(f"开始执行查询: {sql_query}")
+                result = executor.execute(sql_query)
+                print(f"查询执行完成，结果: {result}")
+                if isinstance(result, tuple):
+                    success, message = result
+                    result = {'success': success, 'message': message}
+                elif not isinstance(result, dict):
+                    result = {'success': False, 'message': str(result)}
+            except Exception as exec_error:
+                print(f"执行查询时发生异常: {exec_error}")
+                return jsonify({'success': False, 'message': f'执行查询时发生异常: {str(exec_error)}'})
+
+        # 【新增】4. 查询成功 → 把结果写入缓存
+        if result.get('success') and result.get('message')!='cache匹配成功':
+            # 4.1 生成新文件夹序号
+            exist_folders = [d for d in os.listdir(QUERY_CACHE_DIR)
+                             if os.path.isdir(os.path.join(QUERY_CACHE_DIR, d))]
+            nums = [int(d.replace('query', '')) for d in exist_folders if d.startswith('query')]
+            new_num = max(nums, default=0) + 1
+            new_folder_name = f'query{new_num}'
+            new_folder_path = os.path.join(QUERY_CACHE_DIR, new_folder_name)
+            os.makedirs(new_folder_path, exist_ok=True)
+
+            # 4.2 复制结果 zip
+            dst_zip = os.path.join(new_folder_path, 'result_table.zip')
+            if os.path.exists(USER_RESULT_ZIP):
+                shutil.copy2(USER_RESULT_ZIP, dst_zip)
+
+            # 4.3 更新索引
+            cache_map[new_folder_name] = sql_query
+            with open(CACHE_JSON, 'w', encoding='utf-8') as f:
+                json.dump(cache_map, f, ensure_ascii=False, indent=2)
         
         # 扣除访问次数
         if has_available_access and not has_owner_access and result.get('success'):
@@ -893,6 +941,7 @@ def my_stream_tasks():
             cursor.close()
         if conn and conn.is_connected():
             conn.close()
+
 
 
 
