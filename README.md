@@ -1,7 +1,5 @@
-<h2>云枢智库(CHID)</h2>
-<h3>Cloud Hub Intelligence DataBase</h3>
-<h3 align="right">——基于秘密共享的多方隐私保护数据库系统研究
-</h3>
+<h2>基于秘密共享的安全多方数据联合分析平台</h2>
+
 
 
 <h4>项目简介
