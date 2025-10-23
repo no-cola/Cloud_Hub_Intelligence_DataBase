@@ -48,8 +48,13 @@ structured_data = []
 for row in range(rows):
     start = row * cols
     end = start + cols
-    structured_data.append(data[start:end])
-    
+    row_data = data[start:end]
+    # 过滤掉所有列都为0的行(这些行被WHERE条件过滤掉了)
+    if not all(val == 0 for val in row_data):
+        structured_data.append(row_data)
+seen = set()                    # ←←←
+structured_data = [row for row in structured_data
+                   if not (tuple(row) in seen or seen.add(tuple(row)))]
     # 写入CSV
 output_filename = f"{table_name}.csv"
 with open(os.path.join("user",output_filename), "w", newline='') as f:
